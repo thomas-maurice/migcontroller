@@ -1,0 +1,44 @@
+# Weaviate Helm values for 3-node cluster test
+replicas: 3
+
+image:
+  registry: docker.io
+  repo: semitechnologies/weaviate
+  tag: 1.25.2
+
+service:
+  type: ClusterIP
+
+storage:
+  size: 1Gi
+  storageClassName: standard
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Disable authentication for testing
+authentication:
+  anonymous_access:
+    enabled: true
+
+# Enable cluster mode
+cluster:
+  enabled: true
+  join: weaviate-headless.default.svc.cluster.local
+
+# Disable modules we don't need for testing
+modules:
+  default_vectorizer_module: none
+
+# Environment variables
+env:
+  QUERY_DEFAULTS_LIMIT: "25"
+  AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+  PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+  CLUSTER_GOSSIP_BIND_PORT: "7100"
+  CLUSTER_DATA_BIND_PORT: "7101"

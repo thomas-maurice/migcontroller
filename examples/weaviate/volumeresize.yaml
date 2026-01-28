@@ -1,0 +1,14 @@
+# VolumeResize to migrate Weaviate PVCs from 1Gi to 500Mi
+# Apply with: kubectl apply -f volumeresize.yaml
+# Or use CLI: volmig create resize-weaviate -s weaviate -v weaviate-data --size 500Mi
+---
+apiVersion: storage.maurice.fr/v1alpha1
+kind: VolumeResize
+metadata:
+  name: resize-weaviate
+spec:
+  statefulSetName: weaviate
+  volumes:
+    - name: weaviate-data
+      newSize: 500Mi
+      # storageClass: fast-ssd  # Optional: specify a different storage class

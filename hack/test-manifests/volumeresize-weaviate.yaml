@@ -1,0 +1,9 @@
+apiVersion: storage.maurice.fr/v1alpha1
+kind: VolumeResize
+metadata:
+  name: resize-weaviate
+spec:
+  statefulSetName: weaviate
+  volumes:
+    - name: weaviate-data
+      newSize: 500Mi

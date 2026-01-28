@@ -1,0 +1,9 @@
+apiVersion: storage.maurice.fr/v1alpha1
+kind: VolumeResize
+metadata:
+  name: resize-test-sts
+spec:
+  statefulSetName: test-sts
+  volumes:
+    - name: data
+      newSize: 500Mi

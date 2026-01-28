@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/Users/thomas/git/migcontroller/hack/build-migrator-image.sh:*)"
+    ]
+  }
+}

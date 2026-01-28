@@ -1,0 +1,55 @@
+# Test pod for manually validating the migrator image
+# Usage:
+# 1. Create two test PVCs (source and dest)
+# 2. Apply this manifest
+# 3. Check pod logs for migration result
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-source-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-dest-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: migrator-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: migrator
+      image: mauricethomas/volmig:latest
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: SOURCE_PATH
+          value: /source
+        - name: DEST_PATH
+          value: /dest
+      volumeMounts:
+        - name: source
+          mountPath: /source
+        - name: dest
+          mountPath: /dest
+  volumes:
+    - name: source
+      persistentVolumeClaim:
+        claimName: test-source-pvc
+    - name: dest
+      persistentVolumeClaim:
+        claimName: test-dest-pvc

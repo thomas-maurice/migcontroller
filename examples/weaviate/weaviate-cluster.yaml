@@ -1,0 +1,116 @@
+# 3-Node Weaviate Cluster for VolumeResize Testing
+# Deploy with: kubectl apply -f weaviate-cluster.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: weaviate
+  labels:
+    app.kubernetes.io/name: weaviate
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: weaviate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: weaviate-headless
+  labels:
+    app.kubernetes.io/name: weaviate
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: weaviate
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: weaviate
+  labels:
+    app.kubernetes.io/name: weaviate
+spec:
+  replicas: 3
+  serviceName: weaviate-headless
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: weaviate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: weaviate
+    spec:
+      containers:
+        - name: weaviate
+          image: semitechnologies/weaviate:1.25.2
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 7000
+              name: grpc
+          env:
+            - name: CLUSTER_HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: CLUSTER_GOSSIP_BIND_PORT
+              value: "7100"
+            - name: CLUSTER_DATA_BIND_PORT
+              value: "7101"
+            - name: CLUSTER_JOIN
+              value: >-
+                weaviate-0.weaviate-headless.default.svc.cluster.local:7100,
+                weaviate-1.weaviate-headless.default.svc.cluster.local:7100,
+                weaviate-2.weaviate-headless.default.svc.cluster.local:7100
+            - name: PERSISTENCE_DATA_PATH
+              value: "/var/lib/weaviate"
+            - name: DEFAULT_VECTORIZER_MODULE
+              value: "none"
+            - name: AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED
+              value: "true"
+            - name: QUERY_DEFAULTS_LIMIT
+              value: "100"
+            - name: REPLICATION_MINIMUM_FACTOR
+              value: "1"
+          volumeMounts:
+            - name: weaviate-data
+              mountPath: /var/lib/weaviate
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /v1/.well-known/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /v1/.well-known/ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+  volumeClaimTemplates:
+    - metadata:
+        name: weaviate-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
