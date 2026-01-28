@@ -54,7 +54,9 @@
       "Bash(make:*)",
       "Bash(./bin/volmig:*)",
       "Bash(pre-commit run:*)",
-      "Bash(golangci-lint run:*)"
+      "Bash(golangci-lint run:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)"
     ]
   }
 }
